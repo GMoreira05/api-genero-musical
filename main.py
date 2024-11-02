@@ -8,18 +8,18 @@ import pandas as pd
 # Inicializar o FastAPI
 app = FastAPI()
 
-# Definir o modelo de dados que a API vai receber
-class Musica(BaseModel):
-    letra: str
-
 # Rota principal para prever o gênero
-@app.post("/prever_genero/")
-async def prever_genero(musica: Musica):
+@app.get("/prever/")
+async def prever_genero(letra: str):
     # Carregar o modelo treinado
     modelo = joblib.load('modelo_musica.joblib')
+
+    letra = letra.lower()
+    letra = letra.replace('\n', ' ')
+
     # Fazer a previsão do gênero
-    genero_previsto = modelo.predict([musica.letra])[0]
-    print(modelo.predict([musica.letra]))
+    genero_previsto = modelo.predict([letra])[0]
+    print(modelo.predict([letra]))
     return {"genero": genero_previsto}
 
 # Rota simples para verificar se a API está rodando
