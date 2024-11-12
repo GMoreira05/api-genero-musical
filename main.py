@@ -1,12 +1,22 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from pydantic import BaseModel
 import joblib
 import scrap
 import treinar
 import pandas as pd
+from fastapi.middleware.cors import CORSMiddleware
 
 # Inicializar o FastAPI
 app = FastAPI()
+
+# Adicionando middleware CORS (para poder comunicar frontend)
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 # Rota principal para prever o gênero
 @app.get("/prever/")
@@ -79,17 +89,14 @@ async def tamanho_medio_letras_por_genero():
     tamanho_medio = df.groupby('genero')['tamanho_letra'].mean().to_dict()
     return {"tamanho_medio_letras_por_genero": tamanho_medio}
 
-# Rota 6: Top 5 autores de cada gênero com mais músicas
-@app.get("/top5_autores_por_genero/")
-async def top5_autores_por_genero():
+# Rota 6: Listar gêneros com mais músicas
+@app.get("/generos_com_mais_musicas/")
+async def generos_com_mais_musicas():
+    # Carregar o dataset
     df = pd.read_csv('dataset_genero_musical.csv', delimiter=';')
     df = df.drop_duplicates(subset=['letra'], keep='last')
     
-    top_autores_por_genero = {}
+    # Contagem de músicas por gênero
+    generos_com_mais_musicas = df['genero'].value_counts().to_dict()
     
-    # Agrupa o dataset por gênero e, para cada gênero, obtém os 5 autores com mais músicas
-    for genero, grupo in df.groupby('genero'):
-        top_autores = grupo['autor'].value_counts().head(5).to_dict()
-        top_autores_por_genero[genero] = top_autores
-
-    return {"top5_autores_por_genero": top_autores_por_genero}
+    return {"generos_com_mais_musicas": generos_com_mais_musicas}
